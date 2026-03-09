@@ -1,0 +1,19 @@
+# Entorno virtual
+venv/
+env/
+.env
+
+# Archivos de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Base de datos local (SQLite)
+*.db
+
+# Firebase
+serviceAccountKey.json
+
+# IDEs
+.vscode/
+.idea/
