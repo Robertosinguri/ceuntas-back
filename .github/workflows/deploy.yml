@@ -1,0 +1,59 @@
+name: Deploy Cuentas-Back API (Asustor NAS via Cloudflare Tunnel)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Generar serviceAccountKey.json
+      run: |
+        echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > serviceAccountKey.json
+
+    - name: Instalar Cloudflared
+      run: |
+        curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+        sudo dpkg -i cloudflared.deb
+
+    - name: Configurar Túnel SSH con Cloudflare Access
+      run: |
+        mkdir -p ~/.ssh
+        cat <<EOF > ~/.ssh/config
+        Host ${{ secrets.SERVER_HOST }}
+          HostName ${{ secrets.SERVER_HOST }}
+          User roberto
+          StrictHostLineChecking no
+          StrictHostKeyChecking no
+          UserKnownHostsFile /dev/null
+          ProxyCommand /usr/bin/cloudflared access ssh --hostname %h --id ${{ secrets.CF_CLIENT_ID }} --secret ${{ secrets.CF_CLIENT_SECRET }}
+        EOF
+        chmod 600 ~/.ssh/config
+
+    - name: Instalar sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+
+    - name: Transferir archivos al Servidor (SCP)
+      run: |
+        echo "📦 Creando carpeta de destino y transfiriendo archivos..."
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SERVER_HOST }} "mkdir -p /mnt/asustor_data/25-DOCKER/cuentas-back"
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -r . ${{ secrets.SERVER_HOST }}:/mnt/asustor_data/25-DOCKER/cuentas-back/
+
+    - name: Reconstruir y levantar el contenedor Docker
+      run: |
+        echo "🚀 Iniciando despliegue Docker en el NAS..."
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SERVER_HOST }} "bash -s" << 'EOF'
+          cd /mnt/asustor_data/25-DOCKER/cuentas-back
+          docker-compose down
+          docker-compose up --build -d
+          docker image prune -f
+          echo "✅ Despliegue completado con éxito."
+        EOF
