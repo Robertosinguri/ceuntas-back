@@ -40,17 +40,10 @@ jobs:
     - name: Instalar sshpass
       run: sudo apt-get update && sudo apt-get install -y sshpass
 
-    - name: Empaquetar y Transferir archivos (TAR + SCP)
+    - name: Transferir archivos al Servidor (RSYNC)
       run: |
-        echo "📦 Creando paquete de despliegue (excluyendo .git y venv)..."
-        tar -czf deploy.tar.gz --exclude='.git' --exclude='venv' --exclude='__pycache__' --exclude='deploy.tar.gz' .
-        
-        echo "🚀 Enviando paquete al NAS..."
-        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SERVER_HOST }} "mkdir -p /mnt/asustor_data/25-DOCKER/cuentas-back"
-        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp deploy.tar.gz ${{ secrets.SERVER_HOST }}:/mnt/asustor_data/25-DOCKER/cuentas-back/
-        
-        echo "📂 Descomprimiendo en el servidor..."
-        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SERVER_HOST }} "tar -xzf /mnt/asustor_data/25-DOCKER/cuentas-back/deploy.tar.gz -C /mnt/asustor_data/25-DOCKER/cuentas-back/ && rm /mnt/asustor_data/25-DOCKER/cuentas-back/deploy.tar.gz"
+        echo "🚀 Sincronizando archivos con el NAS (excluyendo .git)..."
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" rsync -avz -e "ssh -o StrictHostKeyChecking=no" --exclude '.git' --exclude 'venv' --exclude '__pycache__' ./ ${{ secrets.SERVER_HOST }}:/mnt/asustor_data/25-DOCKER/cuentas-back/
 
     - name: Reconstruir y levantar el contenedor Docker
       run: |
