@@ -14,7 +14,8 @@ app.add_middleware(
         "http://localhost:4200", 
         "http://127.0.0.1:4200",
         "https://cuentas-40610.web.app",
-        "https://cuentas-40610.firebaseapp.com"
+        "https://cuentas-40610.firebaseapp.com",
+        "https://api-cuentas.rsdev.dev"
     ],
     allow_credentials=True,
     allow_methods=["*"],
