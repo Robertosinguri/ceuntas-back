@@ -43,7 +43,7 @@ jobs:
     - name: Empaquetar y Transferir archivos (TAR + SCP)
       run: |
         echo "📦 Creando paquete de despliegue (excluyendo .git y venv)..."
-        tar -czf deploy.tar.gz --exclude='.git' --exclude='venv' --exclude='__pycache__' .
+        tar -czf deploy.tar.gz --exclude='.git' --exclude='venv' --exclude='__pycache__' --exclude='deploy.tar.gz' .
         
         echo "🚀 Enviando paquete al NAS..."
         sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SERVER_HOST }} "mkdir -p /mnt/asustor_data/25-DOCKER/cuentas-back"
