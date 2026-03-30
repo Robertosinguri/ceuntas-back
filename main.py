@@ -1,26 +1,17 @@
 from fastapi import FastAPI
 from routers import bill_router, report_router
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 
 app = FastAPI(
     title="Cuentas Backend (Firebase Edition)", 
-    description="Backend modular con Firestore para el control de cuentas."
+    description="Backend modular con Firestore para el control de cuentas.",
+    root_path=""
 )
-
-# Soporte para Proxy Headers (Cloudflare)
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:4200", 
-        "http://127.0.0.1:4200",
-        "https://cuentas-40610.web.app",
-        "https://cuentas-40610.firebaseapp.com",
-        "https://api-cuentas.rsdev.dev"
-    ],
+    allow_origins=["*"], # Permitir todo temporalmente para pruebas
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
