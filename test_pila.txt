@@ -1,0 +1,3 @@
+Este es un archivo de prueba para verificar que el comando git push funciona correctamente y no se queda trabado.
+Fecha: 2026-03-30
+Antigravity Test.
