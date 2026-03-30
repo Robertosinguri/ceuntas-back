@@ -40,11 +40,17 @@ jobs:
     - name: Instalar sshpass
       run: sudo apt-get update && sudo apt-get install -y sshpass
 
-    - name: Transferir archivos al Servidor (SCP)
+    - name: Empaquetar y Transferir archivos (TAR + SCP)
       run: |
-        echo "📦 Creando carpeta de destino y transfiriendo archivos..."
+        echo "📦 Creando paquete de despliegue (excluyendo .git y venv)..."
+        tar -czf deploy.tar.gz --exclude='.git' --exclude='venv' --exclude='__pycache__' .
+        
+        echo "🚀 Enviando paquete al NAS..."
         sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SERVER_HOST }} "mkdir -p /mnt/asustor_data/25-DOCKER/cuentas-back"
-        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp -r . ${{ secrets.SERVER_HOST }}:/mnt/asustor_data/25-DOCKER/cuentas-back/
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" scp deploy.tar.gz ${{ secrets.SERVER_HOST }}:/mnt/asustor_data/25-DOCKER/cuentas-back/
+        
+        echo "📂 Descomprimiendo en el servidor..."
+        sshpass -p "${{ secrets.SSH_PASSWORD }}" ssh ${{ secrets.SERVER_HOST }} "tar -xzf /mnt/asustor_data/25-DOCKER/cuentas-back/deploy.tar.gz -C /mnt/asustor_data/25-DOCKER/cuentas-back/ && rm /mnt/asustor_data/25-DOCKER/cuentas-back/deploy.tar.gz"
 
     - name: Reconstruir y levantar el contenedor Docker
       run: |
